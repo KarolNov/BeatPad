@@ -45,7 +45,7 @@ function loadData() {
             track: el.id,
             audio: null,
             audioCxt: null,
-            audioBuffer: null,
+            audioBuffers: [],
             recording: false,
             start: startRecording,
             stop: stopRecording,
@@ -117,31 +117,39 @@ function getSounds(sound) {
         let audioCxt = this.audioCxt;
         audioCxt.decodeAudioData(sound, function(buffer){
             //store array buffer and time its clicked, then when stopping save sum at times
-            console.log(audioCxt.currentTime, buffer);
-            let source = audioCxt.createBufferSource();
-            source.buffer = buffer;
-            source.startTime = audioCxt.currentTime;
-            source.start(0);
-        })
+            this.audioBuffers.push({
+                time: audioCxt.currentTime, 
+                audioBuffer: buffer
+            });    
+        }.bind(this))
     }
 }
+
 function startRecording() {
     this.recording = !this.recording;
     console.log(`Recording ${this.track}`)
     this.audioCxt = new AudioContext();
-    this.audioBuffer = this.audioCxt.createBuffer(2, audioCxt.sampleRate*5, audioCtx.sampleRate);
 }
 
 function stopRecording() {
     this.recording = !this.recording;
-    this.audioCxt.close();
-    console.log(this.audioCxt);
-    this.play();
+    let frameCount = this.audioCxt.sampleRate * this.audioCxt.currentTime;
+    let newBuff = this.audioCxt.createBuffer(2, frameCount, this.audioCxt.sampleRate)
+    for (var channel = 0; channel < 2; channel++) {
+        var nowBuffering = newBuff.getChannelData(channel);
+        for (var i = 0; i < frameCount; i++) {
+          // filling audio with zeros
+          nowBuffering[i] = 0;
+        }
+    }    
+    this.play(newBuff);
 }
 
-function playRecording() {
+function playRecording(buff) {
+    console.log(buff.getChannelData(1));
     var source = this.audioCxt.createBufferSource();
-    source.buffer = this.audioBuffer;
+    source.buffer = buff;
+    source.connect(this.audioCxt.destination);
     source.start();
     console.log(`Playing ${this.track}`)
 }
