@@ -33,9 +33,29 @@ body {
   margin-top: calc((5% - 20px) / 2);
   background-image: linear-gradient(135deg, #999999 20%, #333333 80%, #333333 100%);
   border-radius: 10px;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  -ms-flex-pack: center;
 }
 #padContainer .pad:nth-of-type(3n+1) {
   margin-left: 0px;
+}
+#padContainer .pad .shortcut {
+  color: #005a00;
+}
+#padContainer .pad .shortcut h3 {
+  font-size: 5rem;
 }
 
 #recorder {
