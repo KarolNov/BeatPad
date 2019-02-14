@@ -137,10 +137,15 @@ function stopRecording() {
     let newBuff = this.audioCxt.createBuffer(2, frameCount, this.audioCxt.sampleRate)
     for (var channel = 0; channel < 2; channel++) {
         var nowBuffering = newBuff.getChannelData(channel);
-        for (var i = 0; i < frameCount; i++) {
-          // filling audio with zeros
-          nowBuffering[i] = 0;
-        }
+        console.log(nowBuffering);
+        //fill array with zeros
+        nowBuffering.fill(0);
+        //for each stored audio replace zeros with array buffer corresponding to sound
+        this.audioBuffers.forEach(el=>{
+            let indexStart = el.time * this.audioCxt.sampleRate;
+            //replace slice
+            nowBuffering.splice(indexStart, el.audioBuffer.length, el.audioBuffer.getChannelData(channel));
+        })
     }    
     this.play(newBuff);
 }
