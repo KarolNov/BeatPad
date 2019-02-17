@@ -60,10 +60,11 @@ function loadData() {
     playButtons.forEach((btn, i) => {
         btn.onclick = () => {
             if (!btn.className.includes("paused")) {
-                recorders[i].play(1);
+                recorders[i].play();
                 btn.className = btn.className + " paused"
             } else {
                 btn.className = "playButton";
+                recorders[i].play();
             }
         }
     })
@@ -181,13 +182,33 @@ function stopRecording() {
 }
 
 function playRecording() {
-    var source = this.audioCxt.createBufferSource();
-    source.buffer = this.audio;
-    source.connect(this.audioCxt.destination);
-    source.start();
-    console.log(`Playing ${this.track}`);
-    let i = parseInt(this.track[this.track.length - 1]) - 1;
-    source.onended = () => {
-        playButtons[i].className = "playButton";
-    };
+    this.source =  this.source ? this.source : this.audioCxt.createBufferSource();
+    this.source.buffer = this.audio;
+    let offset = this.offset ? this.offset : 0;
+    if(this.state!=="playing"){
+        this.state = "playing";
+        this.playedAt = this.audioCxt.currentTime;
+        this.source.connect(this.audioCxt.destination);
+        console.log(this.source);
+        if(offset) this.source.start(0, offset);
+        else this.source.start(0);
+        console.log(`Playing ${this.track}`);
+        console.log(this.state)
+        let i = parseInt(this.track[this.track.length - 1]) - 1;
+        this.source.onended = function() {
+            playButtons[i].className = "playButton";
+            this.state = "paused";
+            this.offset = 0;
+            this.playedAt = null;
+            this.pausedAt = null;
+            this.source = null;
+        }.bind(this);
+    }else{
+        this.source.disconnect();
+        this.source.stop(0);
+        this.source = null;
+        this.state = "paused";
+        this.pausedAt = this.audioCxt.currentTime;
+        this.offset = this.pausedAt && this.playedAt ? Math.abs(this.pausedAt-this.playedAt) : 0;
+    }
 }
