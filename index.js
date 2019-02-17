@@ -2,6 +2,7 @@ window.onload = loadData;
 //global variables
 var audio;
 var pads;
+var playButtons;
 var recButtons;
 var recorders = [];
 const shortcuts = {
@@ -52,6 +53,15 @@ function loadData() {
             getSounds: getSounds,
             play: playRecording
         });
+    })
+
+    playButtons = document.getElementsByClassName("playButton");
+    playButtons = Array.from(playButtons);
+    playButtons.forEach((btn, i)=>{
+        btn.onclick = ()=>{
+            recorders[i].play();
+            btn.className = btn.className + " paused"
+        }
     })
 }
 
@@ -133,28 +143,40 @@ function startRecording() {
 
 function stopRecording() {
     this.recording = !this.recording;
+    //we are adding to record length duration of last sound so index never is larger then buffer size
     let frameCount = this.audioCxt.sampleRate * this.audioCxt.currentTime;
+    let lastSound = this.audioBuffers[this.audioBuffers.length-1];
+    //if last sound duration exceeds the duration of whole recording
+    if(lastSound.audioBuffer.duration+lastSound.time){
+        //make the recording long enough
+        frameCount += lastSound.audioBuffer.duration * this.audioCxt.sampleRate;
+    }
     let newBuff = this.audioCxt.createBuffer(2, frameCount, this.audioCxt.sampleRate)
     for (var channel = 0; channel < 2; channel++) {
         var nowBuffering = newBuff.getChannelData(channel);
-        console.log(nowBuffering);
         //fill array with zeros
         nowBuffering.fill(0);
         //for each stored audio replace zeros with array buffer corresponding to sound
         this.audioBuffers.forEach(el=>{
-            let indexStart = el.time * this.audioCxt.sampleRate;
-            //replace slice
-            nowBuffering.splice(indexStart, el.audioBuffer.length, el.audioBuffer.getChannelData(channel));
+            let indexStart = Math.floor(el.time * this.audioCxt.sampleRate);
+            //set at right index the audio buffer stored in recording
+            nowBuffering.set(el.audioBuffer.getChannelData(0), indexStart);
         })
     }    
-    this.play(newBuff);
+    this.audio = newBuff;
+    let x = parseInt(this.track[this.track.length-1])-1;
+    playButtons[x].style = "display: block";
 }
 
-function playRecording(buff) {
-    console.log(buff.getChannelData(1));
+function playRecording() {
     var source = this.audioCxt.createBufferSource();
-    source.buffer = buff;
+    source.buffer = this.audio;
     source.connect(this.audioCxt.destination);
     source.start();
-    console.log(`Playing ${this.track}`)
+    console.log(`Playing ${this.track}`);
+    let i = parseInt(this.track[this.track.length-1])-1;
+    setTimeout(()=>{
+        console.log(this.audio.duration)
+        playButtons[i].className = "playButton";
+    }, this.audio.duration*1000);
 }

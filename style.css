@@ -30,7 +30,7 @@ body {
   width: 30%;
   height: 30%;
   margin-left: 5%;
-  margin-top: calc((5% - 20px) / 2);
+  margin-top: calc((2.5% - 20px) / 2);
   background-image: linear-gradient(135deg, #999999 20%, #333333 80%, #333333 100%);
   border-radius: 10px;
   display: -webkit-box;
@@ -91,7 +91,7 @@ body {
   -ms-align-items: center;
   align-items: center;
 }
-#recorder .track button {
+#recorder .track [id*=track] {
   display: block;
   width: 35px;
   height: 35px;
@@ -121,6 +121,22 @@ body {
   90% {
     box-shadow: 0px 0px 5px 13px rgba(173, 0, 0, 0);
   }
+}
+#recorder .track [id*=play] {
+  display: none;
+  background: rgba(0, 0, 0, 0);
+  margin-left: 10px;
+  width: 35px;
+  height: 35px;
+  border-style: solid;
+  border-width: 17px 0 17px 35px;
+  border-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) #005a00;
+  box-sizing: border-box;
+  transition: 100ms all ease;
+}
+#recorder .track [id*=play].paused {
+  border-style: double;
+  border-width: 0px 0 0px 30px;
 }
 
 /*# sourceMappingURL=style.css.map */
