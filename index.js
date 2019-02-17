@@ -57,10 +57,14 @@ function loadData() {
 
     playButtons = document.getElementsByClassName("playButton");
     playButtons = Array.from(playButtons);
-    playButtons.forEach((btn, i)=>{
-        btn.onclick = ()=>{
-            recorders[i].play();
-            btn.className = btn.className + " paused"
+    playButtons.forEach((btn, i) => {
+        btn.onclick = () => {
+            if (!btn.className.includes("paused")) {
+                recorders[i].play(1);
+                btn.className = btn.className + " paused"
+            } else {
+                btn.className = "playButton";
+            }
         }
     })
 }
@@ -125,12 +129,12 @@ function recordTracks() {
 function getSounds(sound) {
     if (this.recording) {
         let audioCxt = this.audioCxt;
-        audioCxt.decodeAudioData(sound, function(buffer){
+        audioCxt.decodeAudioData(sound, function (buffer) {
             //store array buffer and time its clicked, then when stopping save sum at times
             this.audioBuffers.push({
-                time: audioCxt.currentTime, 
+                time: audioCxt.currentTime,
                 audioBuffer: buffer
-            });    
+            });
         }.bind(this))
     }
 }
@@ -139,15 +143,23 @@ function startRecording() {
     this.recording = !this.recording;
     console.log(`Recording ${this.track}`)
     this.audioCxt = new AudioContext();
+    if (this.audioBuffers.length) {
+        let c = confirm("Would like to edit current track?")
+        if (c) {
+            //leave audio buffers from previous time recording on this track
+        } else {
+            this.audioBuffers = [];
+        }
+    }
 }
 
 function stopRecording() {
     this.recording = !this.recording;
     //we are adding to record length duration of last sound so index never is larger then buffer size
     let frameCount = this.audioCxt.sampleRate * this.audioCxt.currentTime;
-    let lastSound = this.audioBuffers[this.audioBuffers.length-1];
+    let lastSound = this.audioBuffers[this.audioBuffers.length - 1];
     //if last sound duration exceeds the duration of whole recording
-    if(lastSound.audioBuffer.duration+lastSound.time){
+    if (lastSound.audioBuffer.duration + lastSound.time) {
         //make the recording long enough
         frameCount += lastSound.audioBuffer.duration * this.audioCxt.sampleRate;
     }
@@ -157,14 +169,14 @@ function stopRecording() {
         //fill array with zeros
         nowBuffering.fill(0);
         //for each stored audio replace zeros with array buffer corresponding to sound
-        this.audioBuffers.forEach(el=>{
+        this.audioBuffers.forEach(el => {
             let indexStart = Math.floor(el.time * this.audioCxt.sampleRate);
             //set at right index the audio buffer stored in recording
             nowBuffering.set(el.audioBuffer.getChannelData(0), indexStart);
         })
-    }    
+    }
     this.audio = newBuff;
-    let x = parseInt(this.track[this.track.length-1])-1;
+    let x = parseInt(this.track[this.track.length - 1]) - 1;
     playButtons[x].style = "display: block";
 }
 
@@ -174,9 +186,8 @@ function playRecording() {
     source.connect(this.audioCxt.destination);
     source.start();
     console.log(`Playing ${this.track}`);
-    let i = parseInt(this.track[this.track.length-1])-1;
-    setTimeout(()=>{
-        console.log(this.audio.duration)
+    let i = parseInt(this.track[this.track.length - 1]) - 1;
+    source.onended = () => {
         playButtons[i].className = "playButton";
-    }, this.audio.duration*1000);
+    };
 }
